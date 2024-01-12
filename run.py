@@ -116,10 +116,10 @@ class CCPPRunner(tk.Tk):
                 try:
                     file_extension = cpp_file.split(".")[-1]
                     if file_extension == "c":
-                        compile_command = f'gcc {cpp_file}'
+                        compile_command = f'gcc \"{cpp_file}\"'
                         run_command = '.\\a.exe'
                     elif file_extension == "cpp":
-                        compile_command = f'g++ {cpp_file}'
+                        compile_command = f'g++ \"{cpp_file}\"'
                         run_command = '.\\a.exe'
                     else:
                         self.result_label.config(
