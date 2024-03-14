@@ -4,8 +4,8 @@ from tkinter import simpledialog,filedialog
 import tkinter as tk
 import json
 from tkinter import messagebox
-import subprocess
 import msvcrt
+import subprocess
 import os
 
 class StudentForm(tk.Tk):
@@ -101,7 +101,7 @@ class CCPPRunner(tk.Tk):
     def open_files(self):
         initial_directory = os.getcwd()
         file_paths = filedialog.askopenfilenames(
-            initialdir=initial_directory, filetypes=[("C/C++ files", "*.c *.cpp *java")])
+            initialdir=initial_directory, filetypes=[("C/C++ files", "*.c *.cpp *.java")])
         if file_paths:
             self.cpp_files.delete(0, tk.END)
             for file_path in file_paths:
@@ -111,30 +111,32 @@ class CCPPRunner(tk.Tk):
         selected_files = self.cpp_files.get(0, tk.END)
         if selected_files:
             for file in selected_files:
-                subprocess.check_call('cls', shell=True)
+                os.system('cls')
                 file = file.strip()
                 try:
-                    file_extension = file.split(".")[-1]
+                    f_name=file.split("/")[-1]
+                    file=file.replace(f_name,"")
+                    file_extension = f_name.split(".")[-1]
                     if file_extension == "c":
-                        compile_command = f'gcc \"{file}\"'
+                        compile_command = f'gcc \"{f_name}\"'
                         run_command = '.\\a.exe'
                     elif file_extension == "cpp":
-                        compile_command = f'g++ \"{file}\"'
+                        compile_command = f'g++ \"{f_name}\"'
                         run_command = '.\\a.exe'
                     elif file_extension=="java":
-                        compile_command = f'javac \"{file}\"'
-                        run_command = f'java {file}'
+                        compile_command = f'javac \"{f_name}\"'
+                        run_command = f'java \"{f_name.split(".")[0]}\"'
                     else:
                         self.result_label.config(
-                            text=f"Unsupported file format: {file}")
+                            text=f"Unsupported file format: {file+f_name}")
                         continue
 
-                    print(f"{file}\n\n{self.ids[self.id]['Name']}\\{self.ids[self.id]['RollNo']}\\{self.ids[self.id]['Semester']}\\{self.ids[self.id]['Section']}>.\\a.exe")
-                    subprocess.check_call(compile_command, shell=True)
-                    subprocess.check_call(run_command, shell=True)
+                    print(f"{file+f_name}\n\n\n{self.ids[self.id]['Name']}\\{self.ids[self.id]['RollNo']}\\{self.ids[self.id]['Semester']}\\{self.ids[self.id]['Section']}>"+(".\\a.exe" if file_extension in ["c","cpp"] else f"java {f_name.split('.')[0]}"))
+                    subprocess.run(compile_command,cwd=file,shell=True)
+                    subprocess.call(run_command,shell=True,cwd=file)
                     self.wait_for_keypress()
 
-                except subprocess.CalledProcessError:
+                except os.error:
                     self.result_label.config(
                         text=f"Error: Compilation or execution failed for {file}")
                 else:
