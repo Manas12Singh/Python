@@ -4,9 +4,18 @@ from tkinter import simpledialog,filedialog
 import tkinter as tk
 import json
 from tkinter import messagebox
+import sys
 import subprocess
-import msvcrt
 import os
+
+global CLEAR
+global C_CPP_EXTENSION
+if sys.platform=="linux":
+    CLEAR="clear"
+    C_CPP_EXTENSION="out"
+else:
+    CLEAR="cls"
+    C_CPP_EXTENSION="exe"
 
 class StudentForm(tk.Tk):
     def __init__(self):
@@ -15,6 +24,7 @@ class StudentForm(tk.Tk):
         self.setup_ui()
 
     def setup_ui(self):
+        form_dict={'name_label':"Name:"}
         self.name_label = tk.Label(self, text="Name:")
         self.name_entry = tk.Entry(self)
 
@@ -43,7 +53,7 @@ class StudentForm(tk.Tk):
 
         self.submit_button.grid(row=4, column=0, columnspan=2)
 
-    def submit_form(self):
+    def submit_form(self):  
         name = self.name_entry.get()
         rollno = self.rollno_entry.get()
         section = self.section_entry.get()
@@ -75,6 +85,10 @@ class StudentForm(tk.Tk):
         else:
             messagebox.showerror("Error", "Please fill in all fields.")
 
+class insertInput(tk.Tk):
+    def __init__(self,input_files):
+        super().__init__()
+
 class CCPPRunner(tk.Tk):
     def __init__(self,index):
         super().__init__()
@@ -96,42 +110,51 @@ class CCPPRunner(tk.Tk):
 
     def wait_for_keypress(self):
         print("\n\n\n\n\nPress any key to continue...")
-        msvcrt.getch()
+        input()
 
     def open_files(self):
         initial_directory = os.getcwd()
         file_paths = filedialog.askopenfilenames(
-            initialdir=initial_directory, filetypes=[("C/C++ files", "*.c *.cpp *java")])
+            initialdir=initial_directory, filetypes=[("C/C++ files", "*.c *.cpp *.java")])
         if file_paths:
             self.cpp_files.delete(0, tk.END)
             for file_path in file_paths:
                 self.cpp_files.insert(tk.END, file_path)
 
     def compile_and_run(self):
+        cp=os.getcwd()+'\\bin\\'
+        if not os.path.exists(cp):
+            os.makedirs(cp)
         selected_files = self.cpp_files.get(0, tk.END)
         if selected_files:
             for file in selected_files:
-                subprocess.check_call('cls', shell=True)
+                subprocess.check_call(CLEAR, shell=True)
                 file = file.strip()
+                path1=str(os.path.dirname(file))
                 try:
                     file_extension = file.split(".")[-1]
                     if file_extension == "c":
-                        compile_command = f'gcc \"{file}\"'
-                        run_command = '.\\a.exe'
+                        compile_command = f'gcc \"{file}\" -o \"{cp}a.{C_CPP_EXTENSION}\"'
+                        run_command = f'.\\a.{C_CPP_EXTENSION}'
                     elif file_extension == "cpp":
-                        compile_command = f'g++ \"{file}\"'
-                        run_command = '.\\a.exe'
+                        compile_command = f'g++ \"{file}\"  -o \"{cp}a.{C_CPP_EXTENSION}\"'
+                        run_command = f'.\\a.{C_CPP_EXTENSION}'
                     elif file_extension=="java":
-                        compile_command = f'javac \"{file}\"'
-                        run_command = f'java {file}'
+                        compile_command = f'javac -d {cp} \"{file}\"'
+                        k=open(file).readline().split(' ')
+                        if(k[0]=='package'):
+                            run_command = f'java {k[1][:-2]}.{file.split("/")[-1].split(".")[0]}'
+                            path1=path1.removesuffix(k[1][:-2].replace('.','/'))
+                        else:
+                            run_command=f'java {file.split("/")[-1].split(".")[0]}'
                     else:
                         self.result_label.config(
                             text=f"Unsupported file format: {file}")
                         continue
 
-                    print(f"{file}\n\n{self.ids[self.id]['Name']}\\{self.ids[self.id]['RollNo']}\\{self.ids[self.id]['Semester']}\\{self.ids[self.id]['Section']}>.\\a.exe")
-                    subprocess.check_call(compile_command, shell=True)
-                    subprocess.check_call(run_command, shell=True)
+                    print(f"{file}\n\n{self.ids[self.id]['Name']}\\{self.ids[self.id]['RollNo']}\\{self.ids[self.id]['Semester']}\\{self.ids[self.id]['Section']}>{f'java {file.split("/")[-1].split(".")[0]}' if file_extension=='java' else '.\\a.exe'}")
+                    subprocess.check_call(compile_command, shell=True,cwd=path1)
+                    subprocess.check_call(run_command, shell=True,cwd=cp)
                     self.wait_for_keypress()
 
                 except subprocess.CalledProcessError:

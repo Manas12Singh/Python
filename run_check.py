@@ -7,6 +7,8 @@ from tkinter import messagebox
 import msvcrt
 import subprocess
 import os
+import pyautogui
+import time
 
 class StudentForm(tk.Tk):
     def __init__(self):
@@ -106,16 +108,15 @@ class CCPPRunner(tk.Tk):
             self.cpp_files.delete(0, tk.END)
             for file_path in file_paths:
                 self.cpp_files.insert(tk.END, file_path)
-
+    
     def compile_and_run(self):
         selected_files = self.cpp_files.get(0, tk.END)
         if selected_files:
             for file in selected_files:
-                os.system('cls')
                 file = file.strip()
                 try:
                     f_name=file.split("/")[-1]
-                    file=file.replace(f_name,"")
+                    file_add=file.replace(f_name,"")
                     file_extension = f_name.split(".")[-1]
                     if file_extension == "c":
                         compile_command = f'gcc \"{f_name}\"'
@@ -128,12 +129,13 @@ class CCPPRunner(tk.Tk):
                         run_command = f'java \"{f_name.split(".")[0]}\"'
                     else:
                         self.result_label.config(
-                            text=f"Unsupported file format: {file+f_name}")
+                            text=f"Unsupported file format: {file}")
                         continue
 
-                    print(f"{file+f_name}\n\n\n{self.ids[self.id]['Name']}\\{self.ids[self.id]['RollNo']}\\{self.ids[self.id]['Semester']}\\{self.ids[self.id]['Section']}>"+(".\\a.exe" if file_extension in ["c","cpp"] else f"java {f_name.split('.')[0]}"))
-                    subprocess.run(compile_command,cwd=file,shell=True)
-                    subprocess.call(run_command,shell=True,cwd=file)
+                    with open("man.bat", "w") as f:
+                        f.write(f"@echo off\ncls\necho {file}\necho.\necho.\necho.\ncd \"{file_add}\"\n{compile_command}\n{run_command}")
+                    os.system("man.bat")
+                    pyautogui.typewrite("exit\n")
                     self.wait_for_keypress()
 
                 except os.error:
@@ -141,9 +143,12 @@ class CCPPRunner(tk.Tk):
                         text=f"Error: Compilation or execution failed for {file}")
                 else:
                     self.result_label.config(
-                        text=f"Program executed successfully: {file}")
+                        text=f"Program executed successfully")
         else:
             self.result_label.config(text="Please select C/C++ files to run.")
+
+    
+                
 
 class Login(tk.Tk):
     def __init__(self) -> None:

@@ -1,0 +1,157 @@
+Function NumToTextIN(ByVal num As Double) As String
+    Dim numStr As String
+    Dim reversedStr As String
+    Dim hundredPart As String
+    Dim groups() As String
+    Dim denominations() As String
+    Dim result As String
+    Dim i As Integer
+    Dim groupCount As Integer
+    
+    If num = 0 Then
+        NumToTextIN = "Zero"
+        Exit Function
+    End If
+    
+    numStr = Format(num, "0")
+    
+    Dim originalLen As Integer
+    originalLen = Len(numStr)
+    If originalLen > 3 Then
+        If (originalLen - 3) Mod 2 <> 0 Then
+            numStr = "0" & numStr
+        End If
+    End If
+    
+    reversedStr = StrReverse(numStr)
+    
+    hundredPart = ""
+    If Len(reversedStr) >= 3 Then
+        hundredPart = Left(reversedStr, 3)
+        reversedStr = Mid(reversedStr, 4)
+    Else
+        hundredPart = reversedStr
+        reversedStr = ""
+    End If
+    hundredPart = StrReverse(hundredPart)
+    
+    ReDim groups(0)
+    groupCount = 0
+    Do While Len(reversedStr) > 0
+        Dim chunk As String
+        chunk = Left(reversedStr, 2)
+        reversedStr = Mid(reversedStr, 3)
+        chunk = StrReverse(chunk)
+        If groupCount > 0 Then ReDim Preserve groups(groupCount)
+        groups(groupCount) = chunk
+        groupCount = groupCount + 1
+    Loop
+    
+    denominations = Split(",Thousand,Lakh,Crore,Arab,Kharab,Nil,Padma,Shankh", ",")
+    
+    result = ""
+    For i = 0 To groupCount - 1
+        Dim groupNum As Integer
+        If groups(i) = "" Then
+            groupNum = 0
+        Else
+            groupNum = CInt(groups(i))
+        End If
+        If groupNum > 0 Then
+            Dim groupText As String
+            groupText = ConvertTwoDigits(groupNum) & " " & denominations(i + 1)
+            result = groupText & " " & result
+        End If
+    Next i
+    
+    Dim hundredNum As Integer
+    If hundredPart = "" Then
+        hundredNum = 0
+    Else
+        hundredNum = CInt(hundredPart)
+    End If
+    Dim hundredText As String
+    hundredText = ConvertThreeDigits(hundredNum)
+    
+    If result <> "" Then
+        result = Trim(result) & " " & hundredText
+    Else
+        result = hundredText
+    End If
+    
+    If result = "" Then
+        result = "Zero"
+    Else
+        result = Trim(result)
+    End If
+    
+    NumToTextIN = result
+End Function
+
+Private Function ConvertThreeDigits(num As Integer) As String
+    Dim words As String
+    Dim hundreds As Integer
+    Dim remainder As Integer
+    
+    If num = 0 Then
+        ConvertThreeDigits = ""
+        Exit Function
+    End If
+    
+    hundreds = num \ 100
+    remainder = num Mod 100
+    
+    If hundreds > 0 Then
+        words = ConvertOnes(hundreds) & " Hundred"
+    End If
+    
+    If remainder > 0 Then
+        If words <> "" Then
+            words = words & " " & ConvertTwoDigits(remainder)
+        Else
+            words = ConvertTwoDigits(remainder)
+        End If
+    End If
+    
+    ConvertThreeDigits = words
+End Function
+
+Private Function ConvertTwoDigits(num As Integer) As String
+    Dim words As String
+    
+    If num >= 0 And num <= 20 Then
+        words = ConvertOnes(num)
+    Else
+        Dim tens As Integer
+        Dim ones As Integer
+        tens = num \ 10
+        ones = num Mod 10
+        words = ConvertTens(tens)
+        If ones > 0 Then
+            words = words & " " & ConvertOnes(ones)
+        End If
+    End If
+    
+    ConvertTwoDigits = words
+End Function
+
+Private Function ConvertOnes(num As Integer) As String
+    Dim onesArr() As String
+    onesArr = Split("Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten,Eleven,Twelve,Thirteen,Fourteen,Fifteen,Sixteen,Seventeen,Eighteen,Nineteen,Twenty", ",")
+    If num <= 20 Then
+        ConvertOnes = onesArr(num)
+    Else
+        ConvertOnes = ""
+    End If
+End Function
+
+Private Function ConvertTens(num As Integer) As String
+    Dim tensArr() As String
+    tensArr = Split("Twenty,Thirty,Forty,Fifty,Sixty,Seventy,Eighty,Ninety")
+    
+    If num >= 2 And num <= 9 Then
+        ConvertTens = tensArr(num - 2)
+    Else
+        ConvertTens = ""
+    End If
+End Function
